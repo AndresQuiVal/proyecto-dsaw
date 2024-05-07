@@ -53,26 +53,39 @@ router.post('/users/login', async (req, res) => {
 
 
 
-// Nos sirve para validar en cada peticion si el usuario esta logueado o no!
-router.post('/users/is-logged-in', async (req, res) => {
+// Validates each request to check if the user is logged in or needs to be registered
+router.post('/users/is-logged-in-or-register', async (req, res) => {
     const userId = req.body.username;
-    const userTOKEN = req.body.userTOKEN; // Ensure password is securely handled and stored
-    let resDB = await firebaseHelper.validateToken(userId, userTOKEN);
+    const userTOKEN = req.body.userTOKEN;  // Extracts userTOKEN from request
 
-    if (!resDB) {
-        // is not logged in, notify user
-        return res.status(400).send('{"state" : "error", "message" : "Token does not matches" ');
+    try {
+        // First, check if the user exists
+        const userExists = await firebaseHelper.checkUserExists(userId);
+
+        if (!userExists) {
+            // If the user does not exist, redirect to a registration form
+            return res.status(302).json({
+                state: "redirect",
+                message: "User not found, please register",
+                redirectUrl: "/users/register" //redirect to registry
+            });
+        }
+
+        // If user exists, then validate the token
+        let tokenIsValid = await firebaseHelper.validateToken(userId, userTOKEN);
+        if (!tokenIsValid) {
+            return res.status(400).json({ state: "error", message: "Token does not match" });
+        }
+
+        return res.status(200).json({ state: "success", message: "Token matches" });
+    } catch (error) {
+        // Handle potential errors in validation or user existence check
+        console.error("Error during login or registration process:", error);
+        return res.status(500).json({ state: "error", message: "Server error" });
     }
-
-    return res.status(200).send('{"state" : "success", "message" : "Token matches" ');
 });
 
-
-
-
-
 // routes for database update
-
 router.get('/write_database', (req, res) => {
     firebaseHelper.writeFirebase();
     res.status(200).send("Todo excelente");
@@ -87,7 +100,6 @@ router.get('/write_database', (req, res) => {
 
 
 // routes for post detail
-
 router.get('/my-posts/:username', (req, res) => {
     const username = req.params.username;
     const token = req.headers['authorization']; // Commonly tokens are passed in the 'Authorization' header
@@ -111,7 +123,6 @@ router.get('/my-posts/:username', (req, res) => {
 
 
 // CRUD POSTS
-
 router.get('/users/:username/:post_id', async (req, res) => {
     const username = req.params.username;
     const post_id = req.params.post_id;
@@ -142,7 +153,6 @@ router.get('/users/:username/:post_id', async (req, res) => {
 
 
 // TODO PENDING ANDRES!
-
 router.post('/users/:username/post/', async (req, res) => {
     const username = req.params.username;
     const post_id = req.params.post_id;
@@ -178,7 +188,6 @@ router.post('/users/:username/post/', async (req, res) => {
 });
 
 // TODO PENDING! ANDRES
-
 router.put('/users/username:/post_id:/', async (req, res) => {
     const username = req.params.username;
     const post_id = req.params.post_id;
