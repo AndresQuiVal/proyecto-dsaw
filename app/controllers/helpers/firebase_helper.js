@@ -234,6 +234,7 @@ function checkUserExists(userId) {
           reject(error); // Handle possible errors
       });
   });
+  
 }
 
 exports.writeFirebase = writeFirebase;
