@@ -25,7 +25,7 @@ const database = firebase.database();
 // Firestore
 const firestore = firebase.firestore();
 
-console.log("Hola MUndo");
+//console.log("Hola MUndo");
 
 function writeFirebase() {
   database.ref("Clients").set({
