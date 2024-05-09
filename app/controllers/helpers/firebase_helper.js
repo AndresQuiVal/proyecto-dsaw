@@ -81,6 +81,8 @@ function setUserLoginData(userId, password) {
   });
 }
 
+
+
 function validatePassword(username, password) {
   return new Promise((resolve, reject) => {
     const userRef = database.ref(`Clients/${username}/password`);
@@ -100,6 +102,54 @@ function validatePassword(username, password) {
       });
   });
 }
+
+
+
+// Función para obtener todos los posts de todos los usuarios
+// Función para obtener todos los posts de todos los usuarios
+// Función para obtener todos los posts de todos los usuarios, incluyendo el ID
+function getAllPosts() {
+  return new Promise((resolve, reject) => {
+    const clientsRef = database.ref('Clients');
+
+    clientsRef.once(
+      'value',
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const clientsData = snapshot.val();
+          const allPosts = [];
+
+          // Recorre todos los usuarios para recopilar sus posts
+          Object.keys(clientsData).forEach((username) => {
+            const userPosts = clientsData[username].posts || {};
+
+            // Iterar sobre los posts de cada usuario para agregar al arreglo total
+            Object.keys(userPosts).forEach((postId) => {
+              const post = userPosts[postId];
+              allPosts.push({
+                ...post, // Todos los detalles del post
+                postId, // Incluir el ID del post
+                username, // Asocia el nombre de usuario para referencia
+              });
+            });
+          });
+
+          resolve(allPosts);
+        } else {
+          resolve([]); // Si no hay posts
+        }
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+exports.getAllPosts = getAllPosts;
+
+
+
 
 function getUserPosts(username, token) {
   return new Promise((resolve, reject) => {
@@ -158,10 +208,11 @@ function validateToken(username, token) {
 
 function getPostById(username, postId) {
   return new Promise((resolve, reject) => {
-    const postRef = db.ref(`Clients/${username}/posts/${postId}`);
+    const postRef = database.ref(`Clients/${username}/posts/${postId}`);
     postRef
       .once("value", (snapshot) => {
         if (snapshot.exists()) {
+          console.log(snapshot.val())
           resolve(snapshot.val()); // Returns the post data as JSON
         } else {
           resolve(null); // No post found at the given index
@@ -237,6 +288,41 @@ function checkUserExists(userId) {
   
 }
 
+
+function getUserInfo(username) {
+  return new Promise((resolve, reject) => {
+    const userRef = database.ref(`Clients/${username}`);
+
+    userRef.once(
+      'value',
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+
+          // Prepara un objeto con la información relevante
+          const userInfo = {
+            username: userData.username,
+            date_created: userData.date_created,
+            profile_img: userData.profile_img || 'default-profile.jpg', // Puedes cambiar la ruta de la imagen por defecto
+            posts_count: userData.posts ? Object.keys(userData.posts).length : 0,
+            comments_count: userData.comments ? userData.comments.length : 0
+          };
+
+          resolve(userInfo);
+        } else {
+          resolve(null); // No existe el usuario
+        }
+      },
+      (error) => {
+        reject(error);
+      }
+    );
+  });
+}
+
+
+// Exporta la función
+exports.getUserInfo = getUserInfo;
 exports.writeFirebase = writeFirebase;
 exports.setUserLoginData = setUserLoginData;
 exports.validatePassword = validatePassword;

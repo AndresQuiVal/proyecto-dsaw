@@ -16,6 +16,17 @@ router.get(['/', '/home'], (req, res) => {
 });
 
 
+
+router.get(['/posts-d/:username/:postId'], (req, res) => {
+    res.sendFile(path.join(__dirname, '../views/posts', 'post_detail.html'));
+});
+
+
+
+router.get(['/about'], (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'about.html'));
+});
+
 router.get('/shopping_cart', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'cart.html'));
 });
@@ -24,6 +35,13 @@ router.get('/shopping_cart', (req, res) => {
 router.get('/users/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'login.html'));
 });
+
+
+
+router.get('/users-d/:username', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'user_detail.html'));
+});
+
 
 router.post('/users/login', async (req, res) => {
     const userId = req.body.username;
@@ -40,20 +58,25 @@ router.post('/users/login', async (req, res) => {
             return res.redirect('/'); // ADRIAN esta es una opcion, si es que quieres cargar desde el front
         }
     }
-    
+
     // this model is defined under controllers/models, and is the 
     // base for the API responses 
 
     const userTOKEN = userHelpers.generateUUID(); // random access token for temp sess
     resDB = firebaseHelper.setUserToken(userId, userTOKEN);
     // push that token into the database
-    res.status(200).send('{"state" : "success", "message" : "' + userTOKEN + '" }');
+    // res.status(200).send('{"state" : "success", "message" : "' + userTOKEN + '" }');
+
+    res.set('X-user-token', userTOKEN);
+
+    // Send the HTML file
+    return res.redirect(`/users-d/${userId}/`);
+    // res.sendFile(path.join(__dirname, '../views', 'my-profile.html'));
 });
 
 
 
 
-// Validates each request to check if the user is logged in or needs to be registered
 router.post('/users/is-logged-in-or-register', async (req, res) => {
     const userId = req.body.username;
     const userTOKEN = req.body.userTOKEN;  // Extracts userTOKEN from request
@@ -246,6 +269,94 @@ router.delete('/users/username:/post_id:/', async (req, res) => {
     // ADRIAN, aqui se regresa al /my-posts/ del usuario logueado
 
 });
+
+
+
+// CRUD POSTS
+// router.get('/posts/', async (req, res) => {
+
+//     // now check if the post exists
+//     let post_info = await firebaseHelper.getPostById(username, post_id);
+//     if (post_info === undefined) {
+//         // post does not exist
+//         // we can send them to a 404 page
+//         // ADRIAN, aqui si retorna 404, mandalo a un not found
+//         return res.status(404).send('{"state" : "error", "message" : "Post not found" ');
+//     }
+
+//     let postDetailOnString = JSON.stringify(post_info);
+//     return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
+
+//     // ADRIAN, aqui se va a retornar toda la info del post, por lo tanto es importante que
+//     // cuando el usuario habra el post detail siempre se verifique que
+//     // si el es el owner del post, entonces pueda modificar la info en el html, de lo contrario
+//     // le aparecera en readonly, eso lo haces con el userTOKEN
+
+//     // para validar si es el owner, simplemente manda a llamar al endpoint de /is-logged-in/ 
+//     // donde le pasas por parametro el username del post que se acaba de abrir, mas el userTOKEN
+//     // que tienes guardado en el session storage y si sale bien, es por que es su post y puede editarlo!
+
+// });
+
+router.get('/api/posts', async (req, res) => {
+    try {
+        // Obtener todos los posts desde la base de datos
+        const allPosts = await firebaseHelper.getAllPosts();
+
+        // Verifica si hay posts
+        if (allPosts.length === 0) {
+            return res.status(404).json({ state: 'error', message: 'No posts found' });
+        }
+
+        // Responder con todos los posts
+        return res.status(200).json({ state: 'success', message: allPosts });
+    } catch (error) {
+        // Manejo de errores
+        console.error('Error fetching posts:', error);
+        return res.status(500).json({ state: 'error', message: 'Server error', error: error.message });
+    }
+});
+
+
+router.get('/api/posts/:username/:postId', async (req, res) => {
+    const username = req.params.username;
+    const postId = req.params.postId;
+
+    try {
+        // Llamar a la función que obtendrá el post por ID
+        const post = await firebaseHelper.getPostById(username, postId);
+
+        if (!post) {
+            return res.status(404).json({ state: 'error', message: 'Post not found' });
+        }
+
+        // Devolver el post como JSON
+        res.status(200).json({ state: 'success', message: post });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ state: 'error', message: 'Server error', error: error.message });
+    }
+});
+
+
+
+router.get('/api/users/:username', async (req, res) => {
+    const username = req.params.username;
+
+    try {
+        const userInfo = await firebaseHelper.getUserInfo(username);
+
+        if (userInfo) {
+            res.json({ state: 'success', message: userInfo }); 
+        } else {
+            res.status(404).json({ state: 'error', message: 'Not Found' });
+        }
+    } catch (error) {
+        console.error('Error fetching user info:', error);
+        res.status(500).json({ state: 'error', message: 'Server error', error: error.message });
+    }
+});
+
 
 
 function validateAdmin(req, res, next) {
