@@ -374,6 +374,27 @@ function validateAdmin(req, res, next) {
     next();
 }
 
+// Ruta para mostrar la página de agregar posts
+router.get('/users-d/add-post/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
+});
+
+// Ruta para procesar el formulario de agregar posts
+router.post('/users/:username/post', async (req, res) => {
+    const { title, content } = req.body;  // Asegúrate de validar y sanitizar los inputs
+    const username = req.params.username;
+    const token = req.headers['authorization'];
+
+    // Aquí deberías agregar la lógica para guardar el post en la base de datos
+    // Esta función es pseudocódigo y debe implementarse
+    let result = await firebaseHelper.createPost(username, title, content, token);
+    if (result.success) {
+        res.redirect('/');  // Redirige al index o a la página de posts
+    } else {
+        res.status(400).send('Error al agregar el post');
+    }
+});
+
 
 
 module.exports = router;
