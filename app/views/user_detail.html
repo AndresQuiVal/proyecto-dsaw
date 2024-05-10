@@ -123,6 +123,7 @@
                     window.location.href = result.redirectUrl;
                 } else if (result.state === 'success') {
                     document.getElementById('button-post-container').innerHTML = '<a class="btn btn-danger" href="/users-d/add-post/">Agregar Post</a>';
+                    document.getElementById('button-post-container').innerHTML += '<a class="btn btn-danger" style="margin-left: 10px;" href="/users/logout/">Cerrar sesión</a>';
                 } else {
                     document.getElementById('button-post-container').innerHTML = '';
                 }
@@ -167,7 +168,7 @@
                     console.log(user.profile_img);
                     document.getElementById('profile-img').src = user.profile_img || './assets/profile.png';
                     document.getElementById('username').innerText = user.username;
-                    document.getElementById('join-date').querySelector('span').innerText = user.date_created;
+                    document.getElementById('join-date').querySelector('span').innerText = new Date(user.date_created).toLocaleDateString('en-CA');
                     document.getElementById('post-count').innerText = user.posts_count || 0;
                     document.getElementById('comment-count').innerText = user.comments_count || 0;
 

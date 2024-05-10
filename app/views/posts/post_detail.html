@@ -112,7 +112,7 @@
         const post = res.message;
         // Cargar los datos del post en el HTML
         document.getElementById('post-title').innerText = post.title;
-        document.getElementById('post-username').innerHTML = `by <a href="#">${username}</a>`;
+        document.getElementById('post-username').innerHTML = `by <a href="/users-d/${username}/">${username}</a>`;
         document.getElementById('post-section').innerText = post.section;
         document.getElementById('post-description').innerText = post.description;
         document.getElementById('post-thumbnail').src = post.img_url || 'default.jpg';

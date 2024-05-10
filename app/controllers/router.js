@@ -32,8 +32,56 @@ router.get('/shopping_cart', (req, res) => {
 });
 
 
-router.get('/users/login', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views', 'login.html'));
+router.get('/users/login', async (req, res) => {
+    const userToken = req.cookies.userToken;
+    const username = req.cookies.username;
+    console.log(userToken);
+    console.log(username);
+
+
+    // Validate user token and username
+    if (userToken && username) {
+        let ret = await firebaseHelper.validateToken(username, userToken);
+        console.log(ret);
+        if (ret) {
+            // If valid, redirect to my-profile
+            res.redirect(`/users-d/${username}/`);
+        }
+        else {
+            res.sendFile(path.join(__dirname, '../views', 'login.html'));
+        }
+        
+    } else {
+        // If invalid, serve the login page
+        res.sendFile(path.join(__dirname, '../views', 'login.html'));
+    }
+});
+
+router.get('/users/logout', async (req, res) => {
+    const userToken = req.cookies.userToken;
+    const username = req.cookies.username;
+    console.log(userToken);
+    console.log(username);
+
+
+    // Validate user token and username
+    if (userToken && username) {
+        let ret = await firebaseHelper.validateToken(username, userToken);
+        console.log(ret);
+        if (ret) {
+            res.clearCookie('userToken', { path: '/' });
+            res.clearCookie('username', { path: '/' });
+            // If valid, redirect to my-profile
+            res.redirect(`/users/login/`);
+        }
+        else {
+            res.redirect(`/users-d/${username}/`);
+        }
+        
+    } else {
+        // If invalid, serve the login page
+        res.redirect(`/`);
+    }
 });
 
 
@@ -59,7 +107,6 @@ router.post('/users/login', async (req, res) => {
         if (!isValidPassword) {
             // redirect to index()
             return res.status(400).send('{"state" : "error", "message" : "Password incorrect" ');
-            return res.redirect('/'); // ADRIAN esta es una opcion, si es que quieres cargar desde el front
         }
     }
 
@@ -68,6 +115,18 @@ router.post('/users/login', async (req, res) => {
 
     const userTOKEN = userHelpers.generateUUID(); // random access token for temp sess
     resDB = firebaseHelper.setUserToken(userId, userTOKEN);
+
+    res.cookie('username', userId, {
+        httpOnly: true, // Secure against XSS by preventing client-side JavaScript from accessing it
+        secure: true,  // Ensure the cookie is only sent over HTTPS connections
+        sameSite: 'Strict' // Prevent cross-site request forgery (CSRF)
+    });
+
+    res.cookie('userToken', userTOKEN, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Strict'
+    });
     // push that token into the database
     // res.status(200).send('{"state" : "success", "message" : "' + userTOKEN + '" }');
 

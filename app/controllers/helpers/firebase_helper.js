@@ -189,8 +189,11 @@ function validateToken(username, token) {
 
     userRef
       .once("value", (snapshot) => {
+        console.log("USERNAME " + token);
         if (snapshot.exists()) {
+          console.log("HOLA");
           const userToken = snapshot.val();
+          console.log("EL BUEN TOKEN: " + userToken);
           if (userToken === token) {
             resolve(true);
           } else {
