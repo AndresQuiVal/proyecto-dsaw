@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Post</title>
+</head>
+<body>
+    <form action="/users/:username/post" method="POST">
+        <label for="title">Título:</label>
+        <input type="text" id="title" name="title" required><br><br>
+        <label for="content">Contenido:</label>
+        <textarea id="content" name="content" required></textarea><br><br>
+        <button type="submit">Publicar Post</button>
+    </form>
+</body>
+</html>
