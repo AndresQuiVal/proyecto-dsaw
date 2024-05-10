@@ -42,6 +42,10 @@ router.get('/users-d/:username', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'user_detail.html'));
 });
 
+router.get('/users-d/add-post/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
+});
+
 
 router.post('/users/login', async (req, res) => {
     const userId = req.body.username;
@@ -67,10 +71,10 @@ router.post('/users/login', async (req, res) => {
     // push that token into the database
     // res.status(200).send('{"state" : "success", "message" : "' + userTOKEN + '" }');
 
-    res.set('X-user-token', userTOKEN);
+    // res.set('X-user-token', userTOKEN);
 
     // Send the HTML file
-    return res.redirect(`/users-d/${userId}/`);
+    return res.redirect(`/users-d/${userId}?userToken=${userTOKEN}`);
     // res.sendFile(path.join(__dirname, '../views', 'my-profile.html'));
 });
 
@@ -95,6 +99,9 @@ router.post('/users/is-logged-in-or-register', async (req, res) => {
         }
 
         // If user exists, then validate the token
+        console.log(userId);
+        console.log(userTOKEN)
+        
         let tokenIsValid = await firebaseHelper.validateToken(userId, userTOKEN);
         if (!tokenIsValid) {
             return res.status(400).json({ state: "error", message: "Token does not match" });

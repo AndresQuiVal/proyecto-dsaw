@@ -303,7 +303,7 @@ function getUserInfo(username) {
           const userInfo = {
             username: userData.username,
             date_created: userData.date_created,
-            profile_img: userData.profile_img || 'default-profile.jpg', // Puedes cambiar la ruta de la imagen por defecto
+            profile_img: userData.profile_img || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png', // Puedes cambiar la ruta de la imagen por defecto
             posts_count: userData.posts ? Object.keys(userData.posts).length : 0,
             comments_count: userData.comments ? userData.comments.length : 0
           };

@@ -65,6 +65,9 @@
                     <p id="comment-count">0</p>
                 </div>
             </div>
+            <div class="d-flex justify-content-center mb-3" id="button-post-container">
+                
+            </div>
         </div>
     </main>
     <footer>
@@ -74,13 +77,78 @@
     <!-- Script para cargar la información del usuario -->
     <script>
         // Run this code when the DOM is fully loaded
+        function obtenerUserToken() {
+            // Obtén todos los parámetros de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Obtén el valor del parámetro 'userToken'
+            const userToken = urlParams.get('userToken');
+
+            // Muestra el resultado
+            if (userToken) {
+                console.log('User Token:', userToken);
+                // document.getElementById('userToken').innerText = userToken;
+                sessionStorage.setItem('userToken', userToken);
+                return userToken;
+            } else {
+                console.log('User Token no encontrado.');
+                // document.getElementById('userToken').innerText = 'User Token no encontrado.';
+                return false;
+            }
+        }
+
+        async function verificarUsuario(username) {
+            // Obtén los valores del sessionStorage
+            const userTOKEN = sessionStorage.getItem("userToken");
+
+            // Crea el objeto de datos que se enviará en la solicitud
+            const data = {
+                userTOKEN: userTOKEN,
+                username: username
+            };
+
+            try {
+                // Realiza la solicitud usando fetch
+                const response = await fetch('/users/is-logged-in-or-register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                // Manejo de la respuesta
+                const result = await response.json();
+                if (result.state === 'redirect') {
+                    window.location.href = result.redirectUrl;
+                } else if (result.state === 'success') {
+                    document.getElementById('button-post-container').innerHTML = '<a class="btn btn-danger" href="/users-d/add-post/">Agregar Post</a>';
+                } else {
+                    document.getElementById('button-post-container').innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Error al verificar el usuario:', error);
+                alert('Ocurrió un error al verificar el usuario.');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             // Obtener el nombre de usuario desde la URL
+            obtenerUserToken();
+
+            // Elimina posibles elementos vacíos al final
             const urlParts = window.location.pathname.split('/');
             console.log(urlParts);
-            let username = urlParts[urlParts.length - 1];
-            if (username === '') {
-                usenrame = urlParts[urlParts.length - 2]
+
+            // Filtra cualquier elemento vacío
+            const filteredParts = urlParts.filter(part => part !== '');
+
+            // Busca el `username` en la posición adecuada
+            let username = filteredParts[filteredParts.length - 1];
+
+            // Si el último segmento es 'users-d', tomamos el anterior como `username`
+            if (username === 'users-d') {
+                username = filteredParts[filteredParts.length - 2];
             }
 
             console.log(username);
@@ -96,11 +164,17 @@
                 .then((res) => {
                     const user = res.message;
                     // Cargar la información del usuario en el HTML
-                    document.getElementById('profile-img').src = user.profile_img || 'default-profile.jpg';
+                    console.log(user.profile_img);
+                    document.getElementById('profile-img').src = user.profile_img || './assets/profile.png';
                     document.getElementById('username').innerText = user.username;
                     document.getElementById('join-date').querySelector('span').innerText = user.date_created;
                     document.getElementById('post-count').innerText = user.posts_count || 0;
                     document.getElementById('comment-count').innerText = user.comments_count || 0;
+
+
+                    // check for ownership
+                    verificarUsuario(username);
+                    
                 })
                 .catch((error) => {
                     console.error(error);
