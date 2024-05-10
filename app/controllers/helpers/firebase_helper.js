@@ -323,17 +323,25 @@ function getUserInfo(username) {
   });
 }
 
+//Funcion para crear posts
 function createPost(username, title, content, userTOKEN) {
   return new Promise((resolve, reject) => {
-      // Aquí va la lógica para guardar el post en Firebase
-      // Esto es un ejemplo y deberá adaptarse a tu esquema de base de datos
-      const postRef = database.ref(`Clients/${username}/posts`).push();
-      postRef.set({
-          title: title,
-          content: content,
-          createdAt: new Date().toISOString()
-      }).then(() => resolve({ success: true }))
-      .catch(error => reject({ success: false, error: error }));
+      // Primero, puedes incluir una validación del token si es necesario
+      validateToken(username, userTOKEN).then(isValid => {
+        if (!isValid) {
+          reject({ success: false, message: 'Invalid token' });
+          return;
+        }
+        const postRef = database.ref(`Clients/${username}/posts`).push();
+        postRef.set({
+            title: title,
+            content: content,
+            createdAt: new Date().toISOString()
+        }).then(() => resolve({ success: true }))
+        .catch(error => reject({ success: false, error: error }));
+      }).catch(error => {
+        reject({ success: false, message: 'Token validation failed', error: error });
+      });
   });
 }
 
