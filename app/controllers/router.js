@@ -379,22 +379,22 @@ router.get('/users-d/add-post/', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
 });
 
-// Ruta para procesar el formulario de agregar posts
 router.post('/users/:username/post', async (req, res) => {
-    const { title, content } = req.body;  // Asegúrate de validar y sanitizar los inputs
+    const { title, content } = req.body;  
     const username = req.params.username;
-    const token = req.headers['authorization'];
+    const token = req.headers['authorization']; 
 
-    // Aquí deberías agregar la lógica para guardar el post en la base de datos
-    // Esta función es pseudocódigo y debe implementarse
-    let result = await firebaseHelper.createPost(username, title, content, token);
-    if (result.success) {
-        res.redirect('/');  // Redirige al index o a la página de posts
-    } else {
-        res.status(400).send('Error al agregar el post');
+    try {
+        let result = await firebaseHelper.createPost(username, title, content, token);
+        if (result.success) {
+            res.redirect('/');  
+        } else {
+            res.status(400).send('Error al agregar el post');
+        }
+    } catch (error) {
+        console.error('Error al agregar el post:', error);
+        res.status(500).send('Error en el servidor al agregar el post');
     }
 });
-
-
 
 module.exports = router;
