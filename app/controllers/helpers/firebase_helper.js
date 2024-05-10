@@ -105,6 +105,45 @@ function validatePassword(username, password) {
 
 
 
+function createPost(username, title, content, userTOKEN, imgUrl, section, summary) {
+  return new Promise((resolve, reject) => {
+    // Validar el token antes de continuar
+    validateToken(username, userTOKEN)
+      .then((isValid) => {
+        if (!isValid) {
+          reject({ success: false, message: 'Invalid token' });
+          return;
+        }
+
+        // Crear una nueva referencia de post dentro de la estructura de posts del usuario
+        const postRef = database.ref(`Clients/${username}/posts`).push();
+        
+        // Agregar los datos del post a la nueva referencia
+        postRef
+          .set({
+            title: title,
+            description: content,
+            section: section || 'General',
+            summary: summary || content,
+            createdAt: new Date().toISOString(), // Agregar la fecha actual en formato ISO
+            img_url: imgUrl || 'https://i.ibb.co/QcyzcTh/left-image.png'
+          })
+          .then(() => resolve({ success: true })) // Resolución exitosa
+          .catch((error) =>
+            reject({ success: false, error: error }) // Error en caso de falla
+          );
+      })
+      .catch((error) => {
+        reject({
+          success: false,
+          message: 'Token validation failed',
+          error: error,
+        });
+      });
+  });
+}
+
+
 // Función para obtener todos los posts de todos los usuarios
 // Función para obtener todos los posts de todos los usuarios
 // Función para obtener todos los posts de todos los usuarios, incluyendo el ID
@@ -324,26 +363,26 @@ function getUserInfo(username) {
 }
 
 //Funcion para crear posts
-function createPost(username, title, content, userTOKEN) {
-  return new Promise((resolve, reject) => {
-      // Primero, puedes incluir una validación del token si es necesario
-      validateToken(username, userTOKEN).then(isValid => {
-        if (!isValid) {
-          reject({ success: false, message: 'Invalid token' });
-          return;
-        }
-        const postRef = database.ref(`Clients/${username}/posts`).push();
-        postRef.set({
-            title: title,
-            content: content,
-            createdAt: new Date().toISOString()
-        }).then(() => resolve({ success: true }))
-        .catch(error => reject({ success: false, error: error }));
-      }).catch(error => {
-        reject({ success: false, message: 'Token validation failed', error: error });
-      });
-  });
-}
+// function createPost(username, title, content, userTOKEN) {
+//   return new Promise((resolve, reject) => {
+//       // Primero, puedes incluir una validación del token si es necesario
+//       validateToken(username, userTOKEN).then(isValid => {
+//         if (!isValid) {
+//           reject({ success: false, message: 'Invalid token' });
+//           return;
+//         }
+//         const postRef = database.ref(`Clients/${username}/posts`).push();
+//         postRef.set({
+//             title: title,
+//             content: content,
+//             createdAt: new Date().toISOString()
+//         }).then(() => resolve({ success: true }))
+//         .catch(error => reject({ success: false, error: error }));
+//       }).catch(error => {
+//         reject({ success: false, message: 'Token validation failed', error: error });
+//       });
+//   });
+// }
 
 
 // Exporta la función

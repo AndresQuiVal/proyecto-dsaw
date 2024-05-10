@@ -106,7 +106,7 @@ router.post('/users/login', async (req, res) => {
         let isValidPassword = await firebaseHelper.validatePassword(userId, password);
         if (!isValidPassword) {
             // redirect to index()
-            return res.redirect("/users/login/");
+            return res.redirect("/users/login/?error=invalid");
         }
     }
 
@@ -240,13 +240,42 @@ router.get('/users/:username/:post_id', async (req, res) => {
 });
 
 
+router.post('/users/add-post/', async (req, res) => {
+    // Obtén los datos del formulario desde el cuerpo de la solicitud
+    const { title, content } = req.body;
+    const username = req.cookies.username;
 
-// TODO PENDING ANDRES!
-router.post('/users/:username/post/', async (req, res) => {
-    const username = req.params.username;
+    const userToken = req.cookies.userToken;
+
+    console.log(username);
+    console.log(userToken);
+
+    let ret = await firebaseHelper.validateToken(username, userToken);
+    if (!ret) {
+        res.status(400).send('{"state" : "error", "message" : "Not valid token" ');
+    }
+
+    
+
+    const result = await firebaseHelper.createPost(username, title, content, userToken);
+
+    if (result.success) {
+        // Redirect to the user's dashboard or another page after successfully adding the post
+        // res.redirect(`/users-d/${username}`);
+        res.status(200).send('{"state" : "success", "message" : "Post added"} ');
+    } else {
+        // Handle any errors from the post creation
+        // res.redirect('/users/add-post/?error=failed');
+        res.status(400).send('{"state" : "error", "message" : "Not valid" }');
+    }
+
+});
+
+router.post('/users-d/:username/post/', async (req, res) => {
     const post_id = req.params.post_id;
 
-    const token = req.headers['authorization']; // Commonly tokens are passed in the 'Authorization' header
+    const userToken = req.cookies.userToken;
+    const usernameCookie = req.cookies.username;
 
     // Check if the token is present
     if (!token) {
@@ -434,7 +463,7 @@ function validateAdmin(req, res, next) {
 }
 
 // Ruta para mostrar la página de agregar posts
-router.get('/users-d/add-post/', (req, res) => {
+router.get('/users/add-post/', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
 });
 

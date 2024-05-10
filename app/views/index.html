@@ -164,6 +164,7 @@
         const container = document.getElementById('card-container');
         container.innerHTML = ''; // Limpiar contenido previo
         const usernameLoggedin = sessionStorage.getItem('username');
+        console.log("USERNAME LOGGEDIN!! " + usernameLoggedin);
 
         // Usar un bucle `for` para iterar sobre los posts
         for (let i = 0; i < posts.length; i++) {
@@ -171,7 +172,7 @@
           console.log(post);
           let cardHtml;
 
-          if (usernameLoggedin !== null && usernameLoggedin.toString() !== post.username.toString()) {
+          if (usernameLoggedin !== null && usernameLoggedin.toString() === post.username.toString()) {
              cardHtml = `
                 <div class="card m-2 h-25" style="width: 18rem;">
                   <div class="h-25">
