@@ -106,7 +106,7 @@ router.post('/users/login', async (req, res) => {
         let isValidPassword = await firebaseHelper.validatePassword(userId, password);
         if (!isValidPassword) {
             // redirect to index()
-            return res.status(400).send('{"state" : "error", "message" : "Password incorrect" ');
+            return res.redirect("/users/login/");
         }
     }
 
