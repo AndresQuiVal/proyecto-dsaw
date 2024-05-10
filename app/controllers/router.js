@@ -433,6 +433,27 @@ function validateAdmin(req, res, next) {
     next();
 }
 
+// Ruta para mostrar la página de agregar posts
+router.get('/users-d/add-post/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
+});
 
+router.post('/users/:username/post', async (req, res) => {
+    const { title, content } = req.body;  
+    const username = req.params.username;
+    const token = req.headers['authorization']; 
+
+    try {
+        let result = await firebaseHelper.createPost(username, title, content, token);
+        if (result.success) {
+            res.redirect('/');  
+        } else {
+            res.status(400).send('Error al agregar el post');
+        }
+    } catch (error) {
+        console.error('Error al agregar el post:', error);
+        res.status(500).send('Error en el servidor al agregar el post');
+    }
+});
 
 module.exports = router;

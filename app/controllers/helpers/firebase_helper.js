@@ -323,6 +323,20 @@ function getUserInfo(username) {
   });
 }
 
+function createPost(username, title, content, userTOKEN) {
+  return new Promise((resolve, reject) => {
+      // Aquí va la lógica para guardar el post en Firebase
+      // Esto es un ejemplo y deberá adaptarse a tu esquema de base de datos
+      const postRef = database.ref(`Clients/${username}/posts`).push();
+      postRef.set({
+          title: title,
+          content: content,
+          createdAt: new Date().toISOString()
+      }).then(() => resolve({ success: true }))
+      .catch(error => reject({ success: false, error: error }));
+  });
+}
+
 
 // Exporta la función
 exports.getUserInfo = getUserInfo;
@@ -335,3 +349,4 @@ exports.getPostById = getPostById;
 exports.validateToken = validateToken;
 exports.deletePostById = deletePostById;
 exports.checkUserExists = checkUserExists;
+exports.createPost = createPost;
