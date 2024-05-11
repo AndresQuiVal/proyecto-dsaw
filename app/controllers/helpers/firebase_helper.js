@@ -104,6 +104,44 @@ function validatePassword(username, password) {
 }
 
 
+function editPost(postId, username, title, content, userTOKEN, imgUrl, section, summary) {
+  return new Promise((resolve, reject) => {
+    // Validar el token antes de continuar
+    validateToken(username, userTOKEN)
+      .then((isValid) => {
+        if (!isValid) {
+          reject({ success: false, message: 'Invalid token' });
+          return;
+        }
+
+        // Referencia al post específico en la estructura de posts del usuario
+        const postRef = database.ref(`Clients/${username}/posts/${postId}`);
+        
+        // Actualizar los datos del post en la referencia existente
+        postRef
+          .update({
+            title: title,
+            description: content,
+            section: section || 'General',
+            summary: summary || content,
+            img_url: imgUrl || 'https://i.ibb.co/QcyzcTh/left-image.png',
+            // No actualizar la fecha de creación
+          })
+          .then(() => resolve({ success: true })) // Resolución exitosa
+          .catch((error) =>
+            reject({ success: false, error: error }) // Error en caso de falla
+          );
+      })
+      .catch((error) => {
+        reject({
+          success: false,
+          message: 'Token validation failed',
+          error: error,
+        });
+      });
+  });
+}
+
 
 function createPost(username, title, content, userTOKEN, imgUrl, section, summary) {
   return new Promise((resolve, reject) => {
@@ -399,3 +437,4 @@ exports.validateToken = validateToken;
 exports.deletePostById = deletePostById;
 exports.checkUserExists = checkUserExists;
 exports.createPost = createPost;
+exports.editPost = editPost;

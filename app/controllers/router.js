@@ -348,38 +348,37 @@ router.post('/users/:username/:post_id/downvote', async (req, res) => {
     return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
 });
 
-// TODO PENDING! ANDRES
-router.put('/users/username:/post_id:/', async (req, res) => {
-    const username = req.params.username;
+
+router.put('/users/:username/:post_id/', async (req, res) => {
+    const { title, content, summary, section } = req.body;
+    
     const post_id = req.params.post_id;
-
-    const token = req.headers['authorization']; // Commonly tokens are passed in the 'Authorization' header
-
-    // Check if the token is present
-    if (!token) {
-        return res.status(401).send("Access denied. No token provided.");
+    const username = req.params.username;
+    
+    const usernameCookies = req.cookies.username;
+    const userTokenCookies = req.cookies.userToken;
+    
+    if (!usernameCookies || username !== usernameCookies) {
+        res.status(400).send({"state" : "error", "message" : "Not valid token 1" });
     }
 
-    // now check if the post exists
-    let post_info = await firebaseHelper.getPostById(username, post_id);
-    if (post_info === undefined) {
-        // post does not exist
-        // we can send them to a 404 page
-        // ADRIAN, aqui si retorna 404, mandalo a un not found
-        return res.status(404).send('{"state" : "error", "message" : "Post not found" ');
+
+    let ret = await firebaseHelper.validateToken(usernameCookies, userTokenCookies);
+    if (!ret) {
+        res.status(400).send({"state" : "error", "message" : "Not valid token" });
     }
 
-    let postDetailOnString = JSON.stringify(post_info);
-    return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
+    const result = await firebaseHelper.editPost(post_id, usernameCookies, title, content, userTokenCookies, "", section, summary);
 
-    // ADRIAN, aqui se va a retornar toda la info del post, por lo tanto es importante que
-    // cuando el usuario habra el post detail siempre se verifique que
-    // si el es el owner del post, entonces pueda modificar la info en el html, de lo contrario
-    // le aparecera en readonly, eso lo haces con el userTOKEN
-
-    // para validar si es el owner, simplemente manda a llamar al endpoint de /is-logged-in/ 
-    // donde le pasas por parametro el username del post que se acaba de abrir, mas el userTOKEN
-    // que tienes guardado en el session storage y si sale bien, es por que es su post y puede editarlo!
+    if (result.success) {
+        // Redirect to the user's dashboard or another page after successfully adding the post
+        // res.redirect(`/users-d/${username}`);
+        res.status(200).send({"state" : "success", "message" : "Post added" });
+    } else {
+        // Handle any errors from the post creation
+        // res.redirect('/users/add-post/?error=failed');
+        res.status(400).send({"state" : "error", "message" : "Not valid" });
+    }
 
 });
 

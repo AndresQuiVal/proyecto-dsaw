@@ -41,7 +41,7 @@
     <!-- Formulario centrado -->
     <div class="container my-5">
       <h2 class="text-center mb-4">Editar Post</h2>
-      <form id="addPostForm" method="POST" class="p-4 border rounded shadow-sm">
+      <form id="editPostForm" method="POST" class="p-4 border rounded shadow-sm">
         <div class="form-group">
           <label for="title">Título:</label>
           <input
@@ -158,14 +158,18 @@
         document.getElementById("summary").value = this.value.slice(0, 70);
       });
 
+      const pathSegments = window.location.pathname.split('/');
+        const username = pathSegments[2];  // Assuming the username is always the third segment
+        const postId = pathSegments[4];    // Assuming the postId is always the fifth segment
+
       document
-        .getElementById("addPostForm")
+        .getElementById("editPostForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
           const form = new FormData(e.target);
           const data = Object.fromEntries(form.entries());
-          const response = await fetch("/users/add-post/", {
-            method: "POST",
+          const response = await fetch(`/users/${username}/${postId}/`, {
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
           });
