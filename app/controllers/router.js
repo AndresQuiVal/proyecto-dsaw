@@ -35,8 +35,8 @@ router.get('/shopping_cart', (req, res) => {
 router.get('/users/login', async (req, res) => {
     const userToken = req.cookies.userToken;
     const username = req.cookies.username;
-    console.log(userToken);
-    console.log(username);
+    console.log("userTOKEN IN ROUTERS " + userToken);
+    console.log("USERNAME IN ROUTERS " + username);
 
 
     // Validate user token and username
@@ -117,13 +117,13 @@ router.post('/users/login', async (req, res) => {
     resDB = firebaseHelper.setUserToken(userId, userTOKEN);
 
     res.cookie('username', userId, {
-        httpOnly: true, // Secure against XSS by preventing client-side JavaScript from accessing it
+        // httpOnly: true, // Secure against XSS by preventing client-side JavaScript from accessing it
         secure: true,  // Ensure the cookie is only sent over HTTPS connections
         sameSite: 'Strict' // Prevent cross-site request forgery (CSRF)
     });
 
     res.cookie('userToken', userTOKEN, {
-        httpOnly: true,
+        // httpOnly: true,
         secure: true,
         sameSite: 'Strict'
     });
@@ -242,13 +242,14 @@ router.get('/users/:username/:post_id', async (req, res) => {
 
 router.post('/users/add-post/', async (req, res) => {
     // Obtén los datos del formulario desde el cuerpo de la solicitud
-    const { title, content } = req.body;
+    const { title, content, summary } = req.body;
+    console.log(req.body);
     const username = req.cookies.username;
 
     const userToken = req.cookies.userToken;
 
-    console.log(username);
-    console.log(userToken);
+    //console.log(username);
+    console.log("USER TOKEN " + userToken);
 
     let ret = await firebaseHelper.validateToken(username, userToken);
     if (!ret) {
@@ -257,7 +258,7 @@ router.post('/users/add-post/', async (req, res) => {
 
     
 
-    const result = await firebaseHelper.createPost(username, title, content, userToken);
+    const result = await firebaseHelper.createPost(username, title, content, userToken, "", "All", summary);
 
     if (result.success) {
         // Redirect to the user's dashboard or another page after successfully adding the post

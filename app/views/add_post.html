@@ -5,26 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agregar Post</title>
     <!-- Integrar Bootstrap CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" crossorigin="anonymous"/>
   </head>
   <body>
     <!-- Barra de navegación -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="/">The Tech State</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -42,68 +29,75 @@
     <!-- Formulario centrado -->
     <div class="container my-5">
       <h2 class="text-center mb-4">Agregar Nuevo Post</h2>
-      <form
-      id="addPostForm"
-        method="POST"
-        class="p-4 border rounded shadow-sm"
-      >
+      <form id="addPostForm" method="POST" class="p-4 border rounded shadow-sm">
         <div class="form-group">
           <label for="title">Título:</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            class="form-control"
-            required
-          />
+          <input type="text" id="title" name="title" class="form-control" required />
         </div>
         <div class="form-group">
           <label for="content">Contenido:</label>
-          <textarea
-            id="content"
-            name="content"
-            class="form-control"
-            rows="5"
-            required
-          ></textarea>
+          <textarea id="content" name="content" class="form-control" rows="5" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="summary">Resumen</label>
+          <textarea id="summary" name="summary" class="form-control" rows="2" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Publicar Post</button>
       </form>
     </div>
+    
+    <!-- Scripts -->
     <script>
-          document.getElementById('addPostForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+        function validateUserLoggedIn() {
+            const username  = sessionStorage.getItem('username');
+            const userTOKEN = sessionStorage.getItem("userToken");
 
-      const form = new FormData(e.target);
-      const data = Object.fromEntries(form.entries());
+            const cookies = document.cookie.split("; ").reduce((prev, current) => {
+                const [name, ...value] = current.split("=");
+                prev[name] = value.join("=");
+                return prev;
+                }, {});
 
-      const response = await fetch('/users/add-post/', {
-          method: 'POST',
-          body: JSON.stringify(data),
-          headers: {
-              'Content-Type': 'application/json',
-          },
+            console.log(cookies);
+
+            if (username === cookies.username) {
+                console.log("THE SAME");
+                if (!userTOKEN || cookies.userToken !== userTOKEN) {
+                    console.log("DIFFERENT");
+                    window.location.href = '/users/logout'; // lo vamos a sacar de la sesión
+                    return;
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            validateUserLoggedIn();
+        });
+
+
+      document.getElementById('content').addEventListener('input', function() {
+        document.getElementById('summary').value = this.value.slice(0, 70);
       });
 
-      const result = await response.json();
-      if (result.state === 'success') {
-          // Redirige al usuario utilizando el URL proporcionado
+      document.getElementById('addPostForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = new FormData(e.target);
+        const data = Object.fromEntries(form.entries());
+        const response = await fetch('/users/add-post/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.state === 'success') {
           window.location.href = "/";
-      } else {
+        } else {
           alert('Error: ' + result.message);
-      }
+        }
+      });
     </script>
-
-    <!-- Script de Bootstrap -->
-    <script
-      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-pjaaA8dDz/3y4u3e7k0fNhRRrLY0pHRf3a5R0cJ5l5YoNTb5K7laH0ewHbTvI1Pp"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   </body>
 </html>
