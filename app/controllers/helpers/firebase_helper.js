@@ -126,7 +126,9 @@ function createPost(username, title, content, userTOKEN, imgUrl, section, summar
             section: section || 'General',
             summary: summary || content,
             createdAt: new Date().toISOString(), // Agregar la fecha actual en formato ISO
-            img_url: imgUrl || 'https://i.ibb.co/QcyzcTh/left-image.png'
+            img_url: imgUrl || 'https://i.ibb.co/QcyzcTh/left-image.png',
+            upvotes : 0,
+            downvotes : 0
           })
           .then(() => resolve({ success: true })) // Resolución exitosa
           .catch((error) =>
@@ -273,7 +275,7 @@ function deletePostById(username, postId, userTOKEN) {
         reject("Invalid token");
         return;
       }
-      const postRef = db.ref(`Clients/${userId}/posts/${postId}`);
+      const postRef = database.ref(`Clients/${username}/posts/${postId}`);
       postRef
         .once("value", (snapshot) => {
           if (snapshot.exists()) {

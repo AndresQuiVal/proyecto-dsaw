@@ -242,7 +242,7 @@ router.get('/users/:username/:post_id', async (req, res) => {
 
 router.post('/users/add-post/', async (req, res) => {
     // Obtén los datos del formulario desde el cuerpo de la solicitud
-    const { title, content, summary } = req.body;
+    const { title, content, summary, section } = req.body;
     console.log(req.body);
     const username = req.cookies.username;
 
@@ -258,7 +258,7 @@ router.post('/users/add-post/', async (req, res) => {
 
     
 
-    const result = await firebaseHelper.createPost(username, title, content, userToken, "", "All", summary);
+    const result = await firebaseHelper.createPost(username, title, content, userToken, "", section, summary);
 
     if (result.success) {
         // Redirect to the user's dashboard or another page after successfully adding the post
@@ -306,6 +306,56 @@ router.post('/users-d/:username/post/', async (req, res) => {
 
 });
 
+
+router.post('/users/:username/:post_id/upvote', async (req, res) => {
+    const post_id = req.params.post_id;
+
+    const userToken = req.cookies.userToken;
+    const usernameCookie = req.cookies.username;
+
+    // Check if the token is present
+    if (!token) {
+        return res.status(401).send("Access denied. No token provided.");
+    }
+
+    // now check if the post exists
+    let post_info = await firebaseHelper.getPostById(username, post_id);
+    if (post_info === undefined) {
+        // post does not exist
+        // we can send them to a 404 page
+        // ADRIAN, aqui si retorna 404, mandalo a un not found
+        return res.status(404).send('{"state" : "error", "message" : "Post not found" ');
+    }
+
+    let postDetailOnString = JSON.stringify(post_info);
+    return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
+});
+
+
+router.post('/users/:username/:post_id/downvote', async (req, res) => {
+    const post_id = req.params.post_id;
+
+    const userToken = req.cookies.userToken;
+    const usernameCookie = req.cookies.username;
+
+    // Check if the token is present
+    if (!token) {
+        return res.status(401).send("Access denied. No token provided.");
+    }
+
+    // now check if the post exists
+    let post_info = await firebaseHelper.getPostById(username, post_id);
+    if (post_info === undefined) {
+        // post does not exist
+        // we can send them to a 404 page
+        // ADRIAN, aqui si retorna 404, mandalo a un not found
+        return res.status(404).send('{"state" : "error", "message" : "Post not found" ');
+    }
+
+    let postDetailOnString = JSON.stringify(post_info);
+    return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
+});
+
 // TODO PENDING! ANDRES
 router.put('/users/username:/post_id:/', async (req, res) => {
     const username = req.params.username;
@@ -342,27 +392,35 @@ router.put('/users/username:/post_id:/', async (req, res) => {
 });
 
 
-router.delete('/users/username:/post_id:/', async (req, res) => {
+router.delete('/users/:username/:post_id/', async (req, res) => {
     const username = req.params.username;
     const post_id = req.params.post_id;
 
-    const token = req.headers['authorization']; // Commonly tokens are passed in the 'Authorization' header
+    const userTokenCookie = req.cookies.userToken;
+    const usernameCookie = req.cookies.username;
 
-    // Check if the token is present
-    if (!token) {
-        return res.status(401).send("Access denied. No token provided.");
+    console.log("USERNME COOKIE " + usernameCookie);
+    console.log("USERNME " + usernameCookie);
+
+    if (usernameCookie !== username) {
+        return res.status(400).send('{"state" : "error", "message" : "Cannot delete post" }');
     }
+
+    let ret = await firebaseHelper.validateToken(usernameCookie, userTokenCookie);
+    if (!ret) {
+        return res.status(400).send('{"state" : "error", "message" : "Cannot delete post" }');
+    }
+
+    // delete post
 
     // now check if the post exists
-    let resDB = await firebaseHelper.deletePostById(username, post_id, token);
+    let resDB = await firebaseHelper.deletePostById(username, post_id, userTokenCookie);
     if (resDB === false) {
         // cannot delete post, probably beacuse of ownership
-        return res.status(400).send('{"state" : "error", "message" : "Could not delete post" ');
+        return res.status(400).send('{"state" : "error", "message" : "Could not delete post" }');
     }
 
-    return res.status(200).send(`{"state" : "success", "message" : "Post deleted"`);
-
-    // ADRIAN, aqui se regresa al /my-posts/ del usuario logueado
+    return res.status(200).send(`{"state" : "success", "message" : "Post deleted"}`);
 
 });
 
