@@ -215,27 +215,19 @@ router.get('/my-posts/:username', (req, res) => {
 router.get('/users/:username/:post_id', async (req, res) => {
     const username = req.params.username;
     const post_id = req.params.post_id;
-
+    
     // now check if the post exists
     let post_info = await firebaseHelper.getPostById(username, post_id);
     if (post_info === undefined) {
         // post does not exist
         // we can send them to a 404 page
-        // ADRIAN, aqui si retorna 404, mandalo a un not found
-        return res.status(404).send('{"state" : "error", "message" : "Post not found" ');
+        return res.status(404).send('{"state" : "error", "message" : "Post not found" }');
     }
 
+    console.log(post_info);
+
     let postDetailOnString = JSON.stringify(post_info);
-    return res.status(200).send(`{"state" : "success", "message" : "${postDetailOnString}"`);
-
-    // ADRIAN, aqui se va a retornar toda la info del post, por lo tanto es importante que
-    // cuando el usuario habra el post detail siempre se verifique que
-    // si el es el owner del post, entonces pueda modificar la info en el html, de lo contrario
-    // le aparecera en readonly, eso lo haces con el userTOKEN
-
-    // para validar si es el owner, simplemente manda a llamar al endpoint de /is-logged-in/ 
-    // donde le pasas por parametro el username del post que se acaba de abrir, mas el userTOKEN
-    // que tienes guardado en el session storage y si sale bien, es por que es su post y puede editarlo!
+    return res.status(200).send({ state: "success", message: post_info });
 
 });
 
@@ -524,6 +516,10 @@ function validateAdmin(req, res, next) {
 // Ruta para mostrar la página de agregar posts
 router.get('/users/add-post/', (req, res) => {
     res.sendFile(path.join(__dirname, '../views', 'add_post.html'));
+});
+
+router.get('/users/:username/edit-post/:post_id', (req, res) => {
+    res.sendFile(path.join(__dirname, '../views', 'edit_post.html'));
 });
 
 router.post('/users/:username/post', async (req, res) => {
