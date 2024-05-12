@@ -6,7 +6,22 @@ const productRouter = require('./../routes/products');
 const adminProductRouter = require('./../routes/admin_products');
 const firebaseHelper = require('./helpers/firebase_helper');
 const userHelpers = require('./helpers/user_helpers');
+const multer = require('multer');
 const path = require('path');
+const imgbbUploader = require("imgbb-uploader");
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, path.join(__dirname, 'uploads')); 
+    },
+    filename: function(req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+    }
+});
+  
+const upload = multer({ storage: storage });
+
 
 router.use('/admin/products/', validateAdmin, adminProductRouter);
 router.use('/products/', productRouter);
@@ -232,15 +247,29 @@ router.get('/users/:username/:post_id', async (req, res) => {
 });
 
 
-router.post('/users/add-post/', async (req, res) => {
-    // Obtén los datos del formulario desde el cuerpo de la solicitud
-    const { title, content, summary, section } = req.body;
-    console.log(req.body);
-    const username = req.cookies.username;
+router.post('/users/add-post/', upload.single('image'), async (req, res) => {
 
+    const { title, content, summary, section } = req.body;
+    console.log(req.file);
+    const img_url = req.file ? path.join(__dirname, 'uploads', req.file.filename) : undefined;
+    console.log("IMAGE URL " + img_url);
+    
+    var image_full_url = ""
+
+    const imgbbResponse = await imgbbUploader("46c645a9d2728be69b21e840cec640cc", img_url);
+    image_full_url = imgbbResponse.url;  
+    console.log("Uploaded Image URL: " + image_full_url);
+
+    fs.unlink(img_url, (err) => {
+        if (err) {
+            console.error("Failed to delete local image:", err);
+        }
+        console.log("Successfully deleted local image");
+    });
+
+    const username = req.cookies.username;
     const userToken = req.cookies.userToken;
 
-    //console.log(username);
     console.log("USER TOKEN " + userToken);
 
     let ret = await firebaseHelper.validateToken(username, userToken);
@@ -248,9 +277,7 @@ router.post('/users/add-post/', async (req, res) => {
         res.status(400).send('{"state" : "error", "message" : "Not valid token" ');
     }
 
-    
-
-    const result = await firebaseHelper.createPost(username, title, content, userToken, "", section, summary);
+    const result = await firebaseHelper.createPost(username, title, content, userToken, image_full_url, section, summary);
 
     if (result.success) {
         // Redirect to the user's dashboard or another page after successfully adding the post

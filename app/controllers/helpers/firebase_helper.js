@@ -123,8 +123,7 @@ function editPost(postId, username, title, content, userTOKEN, imgUrl, section, 
             title: title,
             description: content,
             section: section || 'General',
-            summary: summary || content,
-            img_url: imgUrl || 'https://i.ibb.co/QcyzcTh/left-image.png',
+            summary: summary || content
             // No actualizar la fecha de creación
           })
           .then(() => resolve({ success: true })) // Resolución exitosa

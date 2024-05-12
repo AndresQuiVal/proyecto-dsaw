@@ -226,7 +226,16 @@
           const posts = data.message;
           const container = document.getElementById("card-container");
           container.innerHTML = ""; // Limpiar contenido previo
-          const usernameLoggedin = sessionStorage.getItem("username");
+          // const usernameLoggedin = sessionStorage.getItem("username");
+          const cookies = document.cookie
+            .split("; ")
+            .reduce((prev, current) => {
+              const [name, ...value] = current.split("=");
+              prev[name] = value.join("=");
+              return prev;
+            }, {});
+          
+          const usernameLoggedin = cookies.username;
           console.log("USERNAME LOGGEDIN!! " + usernameLoggedin);
 
           // Usar un bucle `for` para iterar sobre los posts
@@ -236,7 +245,7 @@
             let cardHtml;
 
             if (
-              usernameLoggedin !== null &&
+              usernameLoggedin !== undefined &&
               usernameLoggedin.toString() === post.username.toString()
             ) {
               cardHtml = `
@@ -252,9 +261,7 @@
                     <h5 class="card-title">${post.title}</h5>
                     <small><i>Por <b>${post.username}</b></i></small>
                     <p class="card-text">${post.summary}</p>
-                    <a href="/posts-d/${post.username}/${
-                post.postId
-              }" class="card-link">Ver post completo</a>
+                    <a href="/posts-d/${post.username}/${post.postId}" class="card-link">Ver post completo</a>
                     <button class='btn btn-danger' onclick="deletePost('${
                       post.postId
                     }', '${post.username}')">Eliminar post</button>
