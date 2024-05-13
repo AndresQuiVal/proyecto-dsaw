@@ -27,7 +27,7 @@ router.use('/admin/products/', validateAdmin, adminProductRouter);
 router.use('/products/', productRouter);
 
 router.get(['/', '/home'], (req, res) => {
-    res.sendFile(path.join(__dirname, '../views', 'index.html'));
+    res.sendFile(path.join(__dirname, '../views', 'index2.html'));
 });
 
 
